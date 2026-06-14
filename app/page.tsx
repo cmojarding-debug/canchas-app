@@ -13,12 +13,12 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-green-600">⚽ CanchasApp</h1>
           <div className="flex gap-3">
-            <button className="px-4 py-2 text-gray-600 hover:text-green-600">
+            <a href="/auth/login" className="px-4 py-2 text-gray-600 hover:text-green-600">
               Iniciar sesión
-            </button>
-            <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+            </a>
+            <a href="/auth/registro" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
               Registrarse
-            </button>
+            </a>
           </div>
         </div>
       </header>
@@ -54,9 +54,9 @@ export default async function Home() {
                 <p className="text-gray-600 text-sm mt-2">{cancha.descripcion}</p>
                 <div className="flex justify-between items-center mt-3">
                   <span className="text-green-600 font-bold">${cancha.precio_hora}/hora</span>
-                  <button className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
+                  <a href={`/canchas/${cancha.id}`} className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
                     Reservar
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
