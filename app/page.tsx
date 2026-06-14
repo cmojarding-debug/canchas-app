@@ -1,4 +1,11 @@
-export default function Home() {
+import { supabase } from '@/lib/supabase'
+
+export default async function Home() {
+  const { data: canchas } = await supabase
+    .from('canchas')
+    .select('*')
+    .eq('activa', true)
+
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -32,20 +39,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Canchas destacadas */}
+      {/* Canchas */}
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h3 className="text-2xl font-bold text-gray-800 mb-6">Canchas destacadas</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
+          {canchas?.map((cancha) => (
+            <div key={cancha.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
               <div className="h-48 bg-green-200 flex items-center justify-center">
                 <span className="text-5xl">⚽</span>
               </div>
               <div className="p-4">
-                <h4 className="font-bold text-gray-800">Cancha Ejemplo {i}</h4>
-                <p className="text-gray-500 text-sm mt-1">Ciudad de México</p>
+                <h4 className="font-bold text-gray-800">{cancha.nombre}</h4>
+                <p className="text-gray-500 text-sm mt-1">{cancha.ciudad}</p>
+                <p className="text-gray-600 text-sm mt-2">{cancha.descripcion}</p>
                 <div className="flex justify-between items-center mt-3">
-                  <span className="text-green-600 font-bold">$300/hora</span>
+                  <span className="text-green-600 font-bold">${cancha.precio_hora}/hora</span>
                   <button className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
                     Reservar
                   </button>
