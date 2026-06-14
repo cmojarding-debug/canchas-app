@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 
 export default function ReservaForm({ cancha }: { cancha: any }) {
   const [fecha, setFecha] = useState('')
-  const [horaInicio, setHoraInicio] = useState('07:00')
+  const [horaInicio, setHoraInicio] = useState('')
   const [duracion, setDuracion] = useState(1)
   const [mensaje, setMensaje] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -30,66 +30,91 @@ export default function ReservaForm({ cancha }: { cancha: any }) {
       window.location.href = '/auth/login'
       return
     }
-    if (!fecha) {
-      setMensaje('Por favor selecciona una fecha')
+    if (!fecha || !horaInicio) {
+      setMensaje('Por favor selecciona fecha y hora.')
       return
     }
+
     setCargando(true)
+    setMensaje('')
+
     const horaFin = calcularHoraFin(horaInicio, duracion)
     const precioTotal = cancha.precio_hora * duracion
 
-    const { error } = await supabase.from('reservas').insert({
+    // Primero guardamos la reserva en Supabase con estado "pendiente"
+    const { data: reserva, error } = await supabase.from('reservas').insert({
       cancha_id: cancha.id,
       jugador_id: usuario.id,
       fecha,
       hora_inicio: horaInicio,
       hora_fin: horaFin,
       precio_total: precioTotal,
-      estado: 'confirmada'
-    })
+      estado: 'pendiente'
+    }).select().single()
 
     if (error) {
-      setMensaje('Error: ' + error.message + ' | Código: ' + error.code)
-    } else {
-      setMensaje('¡Reserva confirmada! Te esperamos en la cancha.')
+      setMensaje('Error al crear la reserva: ' + error.message)
+      setCargando(false)
+      return
     }
-    setCargando(false)
+
+    // Luego creamos la preferencia de pago en Mercado Pago
+    const res = await fetch('/api/crear-preferencia', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        canchaId: cancha.id,
+        canchaNombre: cancha.nombre,
+        precio: precioTotal,
+        fecha,
+        horaInicio,
+        horaFin,
+      })
+    })
+
+    const { init_point } = await res.json()
+
+    // Redirigimos al jugador a pagar
+    window.location.href = init_point
   }
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 space-y-4 h-fit">
-      <h2 className="text-xl font-bold text-gray-800">Hacer reserva</h2>
+      <h3 className="text-lg font-bold text-gray-800">Reservar cancha</h3>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
         <input
           type="date"
           value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          onChange={e => setFecha(e.target.value)}
+          min={new Date().toISOString().split('T')[0]}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Hora inicio</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Hora de inicio</label>
         <select
           value={horaInicio}
-          onChange={(e) => setHoraInicio(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          onChange={e => setHoraInicio(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
-          {horas.map(h => (
-            <option key={h} value={h}>{h}</option>
-          ))}
+          <option value="">Selecciona una hora</option>
+          {horas.map(h => <option key={h} value={h}>{h}</option>)}
         </select>
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Duración</label>
         <select
           value={duracion}
-          onChange={(e) => setDuracion(Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          onChange={e => setDuracion(Number(e.target.value))}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
-          <option value={1}>1 hora — ${cancha.precio_hora}</option>
-          <option value={2}>2 horas — ${cancha.precio_hora * 2}</option>
-          <option value={3}>3 horas — ${cancha.precio_hora * 3}</option>
+          <option value={1}>1 hora - ${cancha.precio_hora}</option>
+          <option value={2}>2 horas - ${cancha.precio_hora * 2}</option>
+          <option value={3}>3 horas - ${cancha.precio_hora * 3}</option>
         </select>
       </div>
 
@@ -104,7 +129,7 @@ export default function ReservaForm({ cancha }: { cancha: any }) {
         disabled={cargando}
         className="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:opacity-50"
       >
-        {cargando ? 'Procesando...' : usuario ? 'Reservar ahora' : 'Inicia sesión para reservar'}
+        {cargando ? 'Procesando...' : usuario ? 'Pagar con Mercado Pago' : 'Inicia sesión para reservar'}
       </button>
     </div>
   )
