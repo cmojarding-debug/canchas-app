@@ -8,6 +8,8 @@ export default function NuevaCancha() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [foto, setFoto] = useState<File | null>(null)
+  const [preview, setPreview] = useState('')
   const [form, setForm] = useState({
     nombre: '',
     direccion: '',
@@ -18,6 +20,14 @@ export default function NuevaCancha() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setFoto(file)
+      setPreview(URL.createObjectURL(file))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,6 +43,28 @@ export default function NuevaCancha() {
       return
     }
 
+    let foto_url = ''
+
+    if (foto) {
+      const ext = foto.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}.${ext}`
+      const { error: uploadError } = await supabase.storage
+        .from('canchas')
+        .upload(fileName, foto)
+
+      if (uploadError) {
+        setError('Error al subir la foto: ' + uploadError.message)
+        setLoading(false)
+        return
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('canchas')
+        .getPublicUrl(fileName)
+
+      foto_url = urlData.publicUrl
+    }
+
     const { error: insertError } = await supabase.from('canchas').insert({
       nombre: form.nombre,
       direccion: form.direccion,
@@ -41,6 +73,7 @@ export default function NuevaCancha() {
       precio_hora: parseFloat(form.precio_hora),
       propietario_id: user.id,
       activa: true,
+      foto_url: foto_url || null,
     })
 
     if (insertError) {
@@ -74,6 +107,26 @@ export default function NuevaCancha() {
         )}
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-8 space-y-6">
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Foto de la cancha</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+              {preview ? (
+                <img src={preview} alt="Preview" className="w-full h-48 object-cover rounded-lg mb-2" />
+              ) : (
+                <div className="h-48 flex items-center justify-center text-gray-400">
+                  <span>📷 Sin foto seleccionada</span>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFoto}
+                className="mt-2 text-sm text-gray-600"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la cancha</label>
             <input

@@ -33,8 +33,12 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {canchas?.map((cancha) => (
             <div key={cancha.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
-              <div className="bg-green-100 h-40 flex items-center justify-center">
-                <span className="text-5xl">⚽</span>
+              <div className="bg-green-100 h-40 flex items-center justify-center overflow-hidden">
+                {cancha.foto_url ? (
+                  <img src={cancha.foto_url} alt={cancha.nombre} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-5xl">⚽</span>
+                )}
               </div>
               <div className="p-4">
                 <h4 className="font-bold text-gray-800">{cancha.nombre}</h4>
