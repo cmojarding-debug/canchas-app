@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import Header from './components/Header'
 
 export default async function Home() {
   const { data: canchas } = await supabase
@@ -8,20 +9,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-green-600">⚽ CanchasApp</h1>
-          <div className="flex gap-3">
-            <a href="/auth/login" className="px-4 py-2 text-gray-600 hover:text-green-600">
-              Iniciar sesión
-            </a>
-            <a href="/auth/registro" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-              Registrarse
-            </a>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero */}
       <section className="bg-green-600 text-white py-20 px-4 text-center">
@@ -42,10 +30,10 @@ export default async function Home() {
       {/* Canchas */}
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h3 className="text-2xl font-bold text-gray-800 mb-6">Canchas destacadas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {canchas?.map((cancha) => (
             <div key={cancha.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
-              <div className="h-48 bg-green-200 flex items-center justify-center">
+              <div className="bg-green-100 h-40 flex items-center justify-center">
                 <span className="text-5xl">⚽</span>
               </div>
               <div className="p-4">

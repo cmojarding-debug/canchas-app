@@ -8,6 +8,8 @@ const client = new MercadoPagoConfig({
 export async function POST(req: Request) {
   const { canchaId, canchaNombre, precio, fecha, horaInicio, horaFin } = await req.json()
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
   const preference = await new Preference(client).create({
     body: {
       items: [
@@ -20,9 +22,9 @@ export async function POST(req: Request) {
         }
       ],
       back_urls: {
-        success: 'http://localhost:3000/dashboard?pago=exitoso',
-        failure: 'http://localhost:3000/dashboard?pago=fallido',
-        pending: 'http://localhost:3000/dashboard?pago=pendiente',
+        success: `${baseUrl}/dashboard?pago=exitoso`,
+        failure: `${baseUrl}/dashboard?pago=fallido`,
+        pending: `${baseUrl}/dashboard?pago=pendiente`,
       },
     }
   })
